@@ -18,6 +18,7 @@ let direction = { x: 1, y: 0 };
 let obstacles = [];
 let food = getRandomFoodPosition();
 let specialFood = getRandomFoodPosition();
+let powerUps = [];
 let score = 0;
 let highScore = localStorage.getItem('highScore') || 0;
 let gameOver = false;
@@ -29,6 +30,8 @@ let specialFoodTimer = 0;
 let difficulty = 1;
 let gameHistory = JSON.parse(localStorage.getItem('gameHistory')) || [];
 const maxHistorySize = 5;
+let powerUpTimer = 0;
+let powerUpActive = false;
 
 document.getElementById('playerName').innerText = playerName;
 document.getElementById('highScore').innerText = highScore;
@@ -45,6 +48,17 @@ function getRandomFoodPosition() {
         };
     }
     return foodPosition;
+}
+
+function getRandomPowerUpPosition() {
+    let powerUpPosition;
+    while (powerUpPosition == null || snake.some(segment => segment.x === powerUpPosition.x && segment.y === powerUpPosition.y) || obstacles.some(obstacle => obstacle.x === powerUpPosition.x && obstacle.y === powerUpPosition.y)) {
+        powerUpPosition = {
+            x: Math.floor(Math.random() * cols),
+            y: Math.floor(Math.random() * rows),
+        };
+    }
+    return powerUpPosition;
 }
 
 function drawGround() {
@@ -78,6 +92,13 @@ function drawObstacles() {
     ctx.fillStyle = '#FF0';
     obstacles.forEach(obstacle => {
         ctx.fillRect(obstacle.x * tileSize, obstacle.y * tileSize, tileSize, tileSize);
+    });
+}
+
+function drawPowerUps() {
+    ctx.fillStyle = '#0FF';
+    powerUps.forEach(powerUp => {
+        ctx.fillRect(powerUp.x * tileSize, powerUp.y * tileSize, tileSize, tileSize);
     });
 }
 
@@ -125,7 +146,7 @@ function updateSnake() {
             difficulty++;
             addObstaclesForLevel();
         }
-    } else if (specialFoodActive && head.x === specialFood.x && head.y === specialFood.y) {
+    } else if (specialFoodActive && head.x === specialFood.x && specialFood.y === head.y) {
         specialFoodActive = false;
         specialFoodTimer = 0;
         score += 5 * difficulty;
@@ -153,6 +174,17 @@ function addObstacle() {
         };
     }
     obstacles.push(obstaclePosition);
+}
+
+function addPowerUp() {
+    let powerUpPosition;
+    while (powerUpPosition == null || snake.some(segment => segment.x === powerUpPosition.x && segment.y === powerUpPosition.y) || obstacles.some(obstacle => obstacle.x === powerUpPosition.x && obstacle.y === powerUpPosition.y)) {
+        powerUpPosition = {
+            x: Math.floor(Math.random() * cols),
+            y: Math.floor(Math.random() * rows),
+        };
+    }
+    powerUps.push(powerUpPosition);
 }
 
 function checkCollision() {
@@ -190,6 +222,27 @@ function update() {
             specialFood = getRandomFoodPosition();
             specialFoodTimer = specialFoodActive ? 50 : 0;
         }
+        if (powerUpTimer > 0) {
+            powerUpTimer--;
+        } else {
+            powerUps = [];
+            if (Math.random() < 0.1) {
+                addPowerUp();
+                powerUpActive = true;
+                powerUpTimer = 50;
+            }
+        }
+        if (powerUpActive) {
+            const head = snake[0];
+            powerUps.forEach((powerUp, index) => {
+                if (head.x === powerUp.x && head.y === powerUp.y) {
+                    powerUps.splice(index, 1);
+                    powerUpActive = false;
+                    powerUpTimer = 0;
+                    score += 10;
+                }
+            });
+        }
     }
 }
 
@@ -199,6 +252,7 @@ function draw() {
     drawFood();
     drawSpecialFood();
     drawObstacles();
+    drawPowerUps();
     drawScore();
     drawHighScore();
     drawLevel();
@@ -258,8 +312,11 @@ function resetGame() {
     level = 1;
     difficulty = 1;
     obstacles = [];
+    powerUps = [];
     specialFoodActive = false;
     specialFoodTimer = 0;
+    powerUpActive = false;
+    powerUpTimer = 0;
     document.getElementById('currentScore').innerText = score;
     document.getElementById('level').innerText = level;
 }
