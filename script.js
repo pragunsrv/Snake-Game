@@ -7,6 +7,7 @@ const cols = 20;
 canvas.width = cols * tileSize;
 canvas.height = rows * tileSize;
 
+let playerName = prompt("Enter your name:");
 let snake = [
     { x: 8, y: 8 },
     { x: 7, y: 8 },
@@ -14,16 +15,22 @@ let snake = [
 ];
 
 let direction = { x: 1, y: 0 };
+let obstacles = [];
 let food = getRandomFoodPosition();
 let score = 0;
 let highScore = 0;
 let gameOver = false;
 let gamePaused = false;
 let gameSpeed = 100;
+let level = 1;
+
+document.getElementById('playerName').innerText = playerName;
+document.getElementById('highScore').innerText = highScore;
+document.getElementById('level').innerText = level;
 
 function getRandomFoodPosition() {
     let foodPosition;
-    while (foodPosition == null || snake.some(segment => segment.x === foodPosition.x && segment.y === foodPosition.y)) {
+    while (foodPosition == null || snake.some(segment => segment.x === foodPosition.x && segment.y === foodPosition.y) || obstacles.some(obstacle => obstacle.x === foodPosition.x && obstacle.y === foodPosition.y)) {
         foodPosition = {
             x: Math.floor(Math.random() * cols),
             y: Math.floor(Math.random() * rows),
@@ -49,6 +56,13 @@ function drawFood() {
     ctx.fillRect(food.x * tileSize, food.y * tileSize, tileSize, tileSize);
 }
 
+function drawObstacles() {
+    ctx.fillStyle = '#FF0';
+    obstacles.forEach(obstacle => {
+        ctx.fillRect(obstacle.x * tileSize, obstacle.y * tileSize, tileSize, tileSize);
+    });
+}
+
 function updateSnake() {
     const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
     snake.unshift(head);
@@ -62,9 +76,24 @@ function updateSnake() {
         if (gameSpeed > 50) {
             gameSpeed -= 5;
         }
+        if (score % 5 === 0) {
+            level++;
+            addObstacle();
+        }
     } else {
         snake.pop();
     }
+}
+
+function addObstacle() {
+    let obstaclePosition;
+    while (obstaclePosition == null || snake.some(segment => segment.x === obstaclePosition.x && segment.y === obstaclePosition.y) || obstacles.some(obstacle => obstacle.x === obstaclePosition.x && obstacle.y === obstaclePosition.y)) {
+        obstaclePosition = {
+            x: Math.floor(Math.random() * cols),
+            y: Math.floor(Math.random() * rows),
+        };
+    }
+    obstacles.push(obstaclePosition);
 }
 
 function checkCollision() {
@@ -76,6 +105,12 @@ function checkCollision() {
 
     for (let i = 1; i < snake.length; i++) {
         if (snake[i].x === head.x && snake[i].y === head.y) {
+            return true;
+        }
+    }
+
+    for (let i = 0; i < obstacles.length; i++) {
+        if (obstacles[i].x === head.x && obstacles[i].y === head.y) {
             return true;
         }
     }
@@ -96,8 +131,10 @@ function draw() {
     drawGround();
     drawSnake();
     drawFood();
+    drawObstacles();
     drawScore();
     drawHighScore();
+    drawLevel();
     if (gameOver) {
         drawGameOver();
     }
@@ -107,15 +144,15 @@ function draw() {
 }
 
 function drawScore() {
-    ctx.fillStyle = '#FFF';
-    ctx.font = '20px Arial';
-    ctx.fillText('Score: ' + score, 10, 20);
+    document.getElementById('currentScore').innerText = score;
 }
 
 function drawHighScore() {
-    ctx.fillStyle = '#FFF';
-    ctx.font = '20px Arial';
-    ctx.fillText('High Score: ' + highScore, 10, 40);
+    document.getElementById('highScore').innerText = highScore;
+}
+
+function drawLevel() {
+    document.getElementById('level').innerText = level;
 }
 
 function drawGameOver() {
@@ -151,6 +188,10 @@ function resetGame() {
     score = 0;
     gameOver = false;
     gameSpeed = 100;
+    level = 1;
+    obstacles = [];
+    document.getElementById('currentScore').innerText = score;
+    document.getElementById('level').innerText = level;
 }
 
 function gameLoop() {
