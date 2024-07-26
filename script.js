@@ -16,6 +16,10 @@ let snake = [
 let direction = { x: 1, y: 0 };
 let food = getRandomFoodPosition();
 let score = 0;
+let highScore = 0;
+let gameOver = false;
+let gamePaused = false;
+let gameSpeed = 100;
 
 function getRandomFoodPosition() {
     let foodPosition;
@@ -52,6 +56,12 @@ function updateSnake() {
     if (head.x === food.x && head.y === food.y) {
         food = getRandomFoodPosition();
         score++;
+        if (score > highScore) {
+            highScore = score;
+        }
+        if (gameSpeed > 50) {
+            gameSpeed -= 5;
+        }
     } else {
         snake.pop();
     }
@@ -74,9 +84,11 @@ function checkCollision() {
 }
 
 function update() {
-    updateSnake();
-    if (checkCollision()) {
-        resetGame();
+    if (!gameOver && !gamePaused) {
+        updateSnake();
+        if (checkCollision()) {
+            gameOver = true;
+        }
     }
 }
 
@@ -85,12 +97,47 @@ function draw() {
     drawSnake();
     drawFood();
     drawScore();
+    drawHighScore();
+    if (gameOver) {
+        drawGameOver();
+    }
+    if (gamePaused && !gameOver) {
+        drawPauseScreen();
+    }
 }
 
 function drawScore() {
     ctx.fillStyle = '#FFF';
     ctx.font = '20px Arial';
     ctx.fillText('Score: ' + score, 10, 20);
+}
+
+function drawHighScore() {
+    ctx.fillStyle = '#FFF';
+    ctx.font = '20px Arial';
+    ctx.fillText('High Score: ' + highScore, 10, 40);
+}
+
+function drawGameOver() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#FFF';
+    ctx.font = '40px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Game Over', canvas.width / 2, canvas.height / 2);
+    ctx.font = '20px Arial';
+    ctx.fillText('Press Enter to Restart', canvas.width / 2, canvas.height / 2 + 40);
+}
+
+function drawPauseScreen() {
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#FFF';
+    ctx.font = '40px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Paused', canvas.width / 2, canvas.height / 2);
+    ctx.font = '20px Arial';
+    ctx.fillText('Press Space to Resume', canvas.width / 2, canvas.height / 2 + 40);
 }
 
 function resetGame() {
@@ -102,6 +149,8 @@ function resetGame() {
     direction = { x: 1, y: 0 };
     food = getRandomFoodPosition();
     score = 0;
+    gameOver = false;
+    gameSpeed = 100;
 }
 
 function gameLoop() {
@@ -109,7 +158,7 @@ function gameLoop() {
         update();
         draw();
         gameLoop();
-    }, 100);
+    }, gameSpeed);
 }
 
 window.addEventListener('keydown', e => {
@@ -125,6 +174,12 @@ window.addEventListener('keydown', e => {
             break;
         case 'ArrowRight':
             if (direction.x === 0) direction = { x: 1, y: 0 };
+            break;
+        case 'Enter':
+            if (gameOver) resetGame();
+            break;
+        case ' ':
+            if (!gameOver) gamePaused = !gamePaused;
             break;
     }
 });
