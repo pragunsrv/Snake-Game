@@ -15,7 +15,16 @@ body {
     background-color: #111;
 }
 
-#scoreboard {
+#scoreboard, #gameHistory {
     margin-top: 20px;
     text-align: center;
+}
+
+#scoreboard {
+    font-size: 18px;
+}
+
+#gameHistory {
+    font-size: 14px;
+    margin-top: 10px;
 }

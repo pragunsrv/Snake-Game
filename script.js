@@ -19,17 +19,22 @@ let obstacles = [];
 let food = getRandomFoodPosition();
 let specialFood = getRandomFoodPosition();
 let score = 0;
-let highScore = 0;
+let highScore = localStorage.getItem('highScore') || 0;
 let gameOver = false;
 let gamePaused = false;
 let gameSpeed = 100;
 let level = 1;
 let specialFoodActive = false;
 let specialFoodTimer = 0;
+let difficulty = 1;
+let gameHistory = JSON.parse(localStorage.getItem('gameHistory')) || [];
+const maxHistorySize = 5;
 
 document.getElementById('playerName').innerText = playerName;
 document.getElementById('highScore').innerText = highScore;
 document.getElementById('level').innerText = level;
+updateScoreboard();
+updateGameHistory();
 
 function getRandomFoodPosition() {
     let foodPosition;
@@ -52,7 +57,7 @@ function drawGround() {
 
 function drawSnake() {
     ctx.fillStyle = '#0F0';
-    snake.forEach(segment => {
+    snake.forEach((segment, index) => {
         ctx.fillRect(segment.x * tileSize, segment.y * tileSize, tileSize, tileSize);
     });
 }
@@ -76,32 +81,66 @@ function drawObstacles() {
     });
 }
 
+function drawScoreboard() {
+    const scoreboard = document.getElementById('scoreboard');
+    scoreboard.innerHTML = `<h2>Scoreboard</h2><ul>${gameHistory.map((entry, index) => `<li>${index + 1}. ${entry.name}: ${entry.score}</li>`).join('')}</ul>`;
+}
+
+function drawGameHistory() {
+    const gameHistoryElem = document.getElementById('gameHistory');
+    gameHistoryElem.innerHTML = `<h2>Recent Games</h2><ul>${gameHistory.map(entry => `<li>${entry.name}: ${entry.score}</li>`).join('')}</ul>`;
+}
+
+function updateScoreboard() {
+    gameHistory = gameHistory.slice(0, maxHistorySize);
+    if (score > highScore) {
+        highScore = score;
+        localStorage.setItem('highScore', highScore);
+    }
+    gameHistory.push({ name: playerName, score: highScore });
+    localStorage.setItem('gameHistory', JSON.stringify(gameHistory));
+    drawScoreboard();
+}
+
+function updateGameHistory() {
+    gameHistory = gameHistory.slice(0, maxHistorySize);
+    drawGameHistory();
+}
+
 function updateSnake() {
     const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
     snake.unshift(head);
 
     if (head.x === food.x && head.y === food.y) {
         food = getRandomFoodPosition();
-        score++;
+        score += difficulty;
         if (score > highScore) {
-            highScore = score;
+            updateScoreboard();
         }
-        if (gameSpeed > 50) {
-            gameSpeed -= 5;
+        if (gameSpeed > 30) {
+            gameSpeed -= 2;
         }
         if (score % 5 === 0) {
             level++;
-            addObstacle();
+            difficulty++;
+            addObstaclesForLevel();
         }
     } else if (specialFoodActive && head.x === specialFood.x && head.y === specialFood.y) {
         specialFoodActive = false;
         specialFoodTimer = 0;
-        score += 5;
+        score += 5 * difficulty;
         if (score > highScore) {
-            highScore = score;
+            updateScoreboard();
         }
     } else {
         snake.pop();
+    }
+}
+
+function addObstaclesForLevel() {
+    obstacles = [];
+    for (let i = 0; i < level * 2; i++) {
+        addObstacle();
     }
 }
 
@@ -217,6 +256,7 @@ function resetGame() {
     gameOver = false;
     gameSpeed = 100;
     level = 1;
+    difficulty = 1;
     obstacles = [];
     specialFoodActive = false;
     specialFoodTimer = 0;
@@ -258,6 +298,16 @@ window.addEventListener('keydown', e => {
                 gameLoop();
             } else {
                 gamePaused = !gamePaused;
+            }
+            break;
+        case '+':
+            if (!gameOver && !gamePaused) {
+                gameSpeed = Math.max(10, gameSpeed - 10);
+            }
+            break;
+        case '-':
+            if (!gameOver && !gamePaused) {
+                gameSpeed = Math.min(300, gameSpeed + 10);
             }
             break;
     }
