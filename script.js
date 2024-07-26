@@ -17,12 +17,15 @@ let snake = [
 let direction = { x: 1, y: 0 };
 let obstacles = [];
 let food = getRandomFoodPosition();
+let specialFood = getRandomFoodPosition();
 let score = 0;
 let highScore = 0;
 let gameOver = false;
 let gamePaused = false;
 let gameSpeed = 100;
 let level = 1;
+let specialFoodActive = false;
+let specialFoodTimer = 0;
 
 document.getElementById('playerName').innerText = playerName;
 document.getElementById('highScore').innerText = highScore;
@@ -40,7 +43,10 @@ function getRandomFoodPosition() {
 }
 
 function drawGround() {
-    ctx.fillStyle = '#111';
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, '#111');
+    gradient.addColorStop(1, '#333');
+    ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
@@ -54,6 +60,13 @@ function drawSnake() {
 function drawFood() {
     ctx.fillStyle = '#F00';
     ctx.fillRect(food.x * tileSize, food.y * tileSize, tileSize, tileSize);
+}
+
+function drawSpecialFood() {
+    if (specialFoodActive) {
+        ctx.fillStyle = '#00F';
+        ctx.fillRect(specialFood.x * tileSize, specialFood.y * tileSize, tileSize, tileSize);
+    }
 }
 
 function drawObstacles() {
@@ -79,6 +92,13 @@ function updateSnake() {
         if (score % 5 === 0) {
             level++;
             addObstacle();
+        }
+    } else if (specialFoodActive && head.x === specialFood.x && head.y === specialFood.y) {
+        specialFoodActive = false;
+        specialFoodTimer = 0;
+        score += 5;
+        if (score > highScore) {
+            highScore = score;
         }
     } else {
         snake.pop();
@@ -124,6 +144,13 @@ function update() {
         if (checkCollision()) {
             gameOver = true;
         }
+        if (specialFoodTimer > 0) {
+            specialFoodTimer--;
+        } else {
+            specialFoodActive = Math.random() < 0.1;
+            specialFood = getRandomFoodPosition();
+            specialFoodTimer = specialFoodActive ? 50 : 0;
+        }
     }
 }
 
@@ -131,6 +158,7 @@ function draw() {
     drawGround();
     drawSnake();
     drawFood();
+    drawSpecialFood();
     drawObstacles();
     drawScore();
     drawHighScore();
@@ -190,6 +218,8 @@ function resetGame() {
     gameSpeed = 100;
     level = 1;
     obstacles = [];
+    specialFoodActive = false;
+    specialFoodTimer = 0;
     document.getElementById('currentScore').innerText = score;
     document.getElementById('level').innerText = level;
 }
@@ -217,13 +247,20 @@ window.addEventListener('keydown', e => {
             if (direction.x === 0) direction = { x: 1, y: 0 };
             break;
         case 'Enter':
-            if (gameOver) resetGame();
+            if (gameOver) {
+                resetGame();
+                gameLoop();
+            }
             break;
         case ' ':
-            if (!gameOver) gamePaused = !gamePaused;
+            if (gameOver) {
+                resetGame();
+                gameLoop();
+            } else {
+                gamePaused = !gamePaused;
+            }
             break;
     }
 });
 
-resetGame();
 gameLoop();
