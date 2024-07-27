@@ -329,6 +329,11 @@ function gameLoop() {
     }, gameSpeed);
 }
 
+document.getElementById('resetButton').addEventListener('click', () => {
+    resetGame();
+    gameLoop();
+});
+
 window.addEventListener('keydown', e => {
     switch (e.key) {
         case 'ArrowUp':
