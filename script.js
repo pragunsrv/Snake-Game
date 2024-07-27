@@ -70,7 +70,7 @@ function drawGround() {
 }
 
 function drawSnake() {
-    ctx.fillStyle = '#0F0';
+    ctx.fillStyle = document.getElementById('snakeColor').value || '#0F0';
     snake.forEach((segment, index) => {
         ctx.fillRect(segment.x * tileSize, segment.y * tileSize, tileSize, tileSize);
     });
@@ -144,7 +144,9 @@ function updateSnake() {
         if (score % 5 === 0) {
             level++;
             difficulty++;
-            addObstaclesForLevel();
+            if (document.getElementById('toggleObstacles').checked) {
+                addObstaclesForLevel();
+            }
         }
     } else if (specialFoodActive && head.x === specialFood.x && specialFood.y === head.y) {
         specialFoodActive = false;
@@ -258,8 +260,9 @@ function draw() {
     drawLevel();
     if (gameOver) {
         drawGameOver();
-    }
-    if (gamePaused && !gameOver) {
+        updateScoreboard();
+        updateGameHistory();
+    } else if (gamePaused) {
         drawPauseScreen();
     }
 }
@@ -332,6 +335,10 @@ function gameLoop() {
 document.getElementById('resetButton').addEventListener('click', () => {
     resetGame();
     gameLoop();
+});
+
+document.getElementById('gameSpeed').addEventListener('input', (e) => {
+    gameSpeed = parseInt(e.target.value);
 });
 
 window.addEventListener('keydown', e => {

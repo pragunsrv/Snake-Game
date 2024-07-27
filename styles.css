@@ -76,7 +76,8 @@ label {
     margin-top: 10px;
 }
 
-input[type="range"] {
+input[type="range"],
+input[type="color"] {
     width: 100%;
 }
 
