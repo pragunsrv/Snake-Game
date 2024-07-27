@@ -7,7 +7,7 @@ const cols = 20;
 canvas.width = cols * tileSize;
 canvas.height = rows * tileSize;
 
-let playerName = prompt("Enter your name:");
+let playerName = prompt("Enter your name:") || "Player";
 let snake = [
     { x: 8, y: 8 },
     { x: 7, y: 8 },
@@ -25,17 +25,17 @@ let gameOver = false;
 let gamePaused = false;
 let gameSpeed = 100;
 let level = 1;
+let difficulty = 1;
 let specialFoodActive = false;
 let specialFoodTimer = 0;
-let difficulty = 1;
-let gameHistory = JSON.parse(localStorage.getItem('gameHistory')) || [];
-const maxHistorySize = 5;
 let powerUpTimer = 0;
 let powerUpActive = false;
+const maxHistorySize = 5;
+let gameHistory = JSON.parse(localStorage.getItem('gameHistory')) || [];
 
-document.getElementById('playerName').innerText = playerName;
-document.getElementById('highScore').innerText = highScore;
-document.getElementById('level').innerText = level;
+document.getElementById('playerName').innerText = `Player: ${playerName}`;
+document.getElementById('highScore').innerText = `High Score: ${highScore}`;
+document.getElementById('level').innerText = `Level: ${level}`;
 updateScoreboard();
 updateGameHistory();
 
@@ -71,7 +71,7 @@ function drawGround() {
 
 function drawSnake() {
     ctx.fillStyle = document.getElementById('snakeColor').value || '#0F0';
-    snake.forEach((segment, index) => {
+    snake.forEach((segment) => {
         ctx.fillRect(segment.x * tileSize, segment.y * tileSize, tileSize, tileSize);
     });
 }
@@ -258,6 +258,7 @@ function draw() {
     drawScore();
     drawHighScore();
     drawLevel();
+
     if (gameOver) {
         drawGameOver();
         updateScoreboard();
@@ -268,15 +269,15 @@ function draw() {
 }
 
 function drawScore() {
-    document.getElementById('currentScore').innerText = score;
+    document.getElementById('currentScore').innerText = `Score: ${score}`;
 }
 
 function drawHighScore() {
-    document.getElementById('highScore').innerText = highScore;
+    document.getElementById('highScore').innerText = `High Score: ${highScore}`;
 }
 
 function drawLevel() {
-    document.getElementById('level').innerText = level;
+    document.getElementById('level').innerText = `Level: ${level}`;
 }
 
 function drawGameOver() {
@@ -309,19 +310,19 @@ function resetGame() {
     ];
     direction = { x: 1, y: 0 };
     food = getRandomFoodPosition();
-    score = 0;
-    gameOver = false;
-    gameSpeed = 100;
-    level = 1;
-    difficulty = 1;
-    obstacles = [];
-    powerUps = [];
     specialFoodActive = false;
     specialFoodTimer = 0;
+    powerUps = [];
     powerUpActive = false;
     powerUpTimer = 0;
-    document.getElementById('currentScore').innerText = score;
-    document.getElementById('level').innerText = level;
+    obstacles = [];
+    score = 0;
+    level = 1;
+    difficulty = 1;
+    gameOver = false;
+    gameSpeed = 100;
+    document.getElementById('currentScore').innerText = `Score: ${score}`;
+    document.getElementById('level').innerText = `Level: ${level}`;
 }
 
 function gameLoop() {
@@ -339,6 +340,10 @@ document.getElementById('resetButton').addEventListener('click', () => {
 
 document.getElementById('gameSpeed').addEventListener('input', (e) => {
     gameSpeed = parseInt(e.target.value);
+});
+
+document.getElementById('snakeColor').addEventListener('input', (e) => {
+    draw(); // Refresh the canvas with the new snake color
 });
 
 window.addEventListener('keydown', e => {
@@ -383,3 +388,4 @@ window.addEventListener('keydown', e => {
 });
 
 gameLoop();
+    
